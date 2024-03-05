@@ -1,13 +1,12 @@
 from time import sleep
 from textblob import TextBlob
 import pandas as pd
-from github_data_extractor import GitHubDataExtractor
 import difflib
 
 
 class CommitAnalyzer:
-    def __init__(self, df_commits, owner, repo, token):
-        self.github_extractor = GitHubDataExtractor(owner, repo, token)
+    def __init__(self, df_commits, data_extractor):
+        self.data_extractor = data_extractor
         self.df_commits = df_commits
 
 
@@ -29,17 +28,17 @@ class CommitAnalyzer:
     def parse_diffs(self, diffs):
         parsed_diffs = {}
         for file_diff in diffs:
-            file_name = file_diff['filename']
-            diff_text = file_diff['patch'] if 'patch' in file_diff else ''
-            diff_lines = diff_text.split('\n')
+            file_name = file_diff['file_name']
+            diff_text = file_diff['diff_text']
+            '''diff_lines = diff_text.split('\n')
             diff_blocks = []
             for line in diff_lines:
                 if line.startswith('@@'):
                     diff_blocks.append([line])
                 elif line.startswith('+') or line.startswith('-') or line.startswith(' '):
                     if diff_blocks:
-                        diff_blocks[-1].append(line)
-            parsed_diffs[file_name] = diff_blocks
+                        diff_blocks[-1].append(line)'''
+            parsed_diffs[file_name] = diff_text
         return parsed_diffs
 
 
@@ -60,7 +59,7 @@ class CommitAnalyzer:
     def analyze_commit_diffs(self):
         all_diffs = {}
         for sha in self.df_commits['sha']:
-            diffs = self.github_extractor.get_commit_diff(sha)
+            diffs = self.data_extractor.get_commit_diff(sha)
             parsed_diffs = self.parse_diffs(diffs)
             all_diffs[sha] = parsed_diffs
             sleep(1)  # Sleep between requests

@@ -1,9 +1,10 @@
-from github_data_extractor import GitHubDataExtractor
+from repo_data_extractor import RepoDataExtractor
 from commit_preprocessor import CommitPreprocessor
 from commit_analyzer import CommitAnalyzer
 from openai_interface import OpenAIAPI
 import pandas as pd
 from user_interface import UserInterface
+import shutil
 
 
 class Application:
@@ -17,35 +18,38 @@ class Application:
 
     def run(self):
         # Get git details
-        self.owner, self.repo, self.token = self.ui.get_git_details()
+        self.repo_url, self.temp_repo_dir = self.ui.get_git_details()
 
         # Instantiate GitHubDataExtractor
-        github_extractor = GitHubDataExtractor(self.owner, self.repo, self.token)
+        data_extractor = RepoDataExtractor(self.repo_url, self.temp_repo_dir)
         # Get commits
         print("Fetching commits...")
-        commits_data = github_extractor.get_commits()
+        commits_data = data_extractor.get_commits()
 
         print(f"Collected {len(commits_data)} commits. Fetching details and preprocessing...")
 
         # Instantiate CommitPreprocessor
-        preprocessor = CommitPreprocessor(self.owner, self.repo, self.token)
+        preprocessor = CommitPreprocessor(data_extractor)
         # Preprocess commits
         processed_commits_df = preprocessor.preprocess_commits(commits_data)        
 
         # Instantiate CommitAnalyzer
-        analyzer = CommitAnalyzer(processed_commits_df, self.owner, self.repo, self.token)
+        analyzer = CommitAnalyzer(processed_commits_df, data_extractor)
         # Analyze commits
         analyzed_df = analyzer.analyze_commits()
         print("Preprocessing & Analyses completed.")
         self.save_analyzed_df(analyzed_df)
 
-        # Instantiate OopenAIAPI
+        # Instantiate openAIAPI
         openai_api = OpenAIAPI()
         # Get the criteria
         criteria = self.ui.get_criteria()
         gpt_response = openai_api.ask_gpt(criteria)
 
         self.ui.show_results(gpt_response)
+
+        shutil.rmtree(self.temp_repo_dir)
+
 
 
 if __name__ == "__main__":

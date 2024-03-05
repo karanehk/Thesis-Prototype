@@ -1,31 +1,29 @@
-from github_data_extractor import GitHubDataExtractor
 from time import sleep
 import pandas as pd
 
 
 class CommitPreprocessor:
 
-    def __init__(self, owner, repo, token):
-        self.github_extractor = GitHubDataExtractor(owner, repo, token)
+    def __init__(self, data_extractor):
+        self.data_extractor = data_extractor
 
     def preprocess_commits(self, commits):
         commit_list = []
 
-        for commit in commits:
-            stats = self.github_extractor.get_commit_stats(commit['sha'])
-            commit_data = commit['commit']
+        for commit_data in commits:
+            stats = self.data_extractor.get_commit_stats(commit_data['sha'])
+            #commit_data = commit['commit']
             commit_list.append({
-                'sha': commit.get('sha'),
+                'sha': commit_data['sha'],
                 'message': commit_data['message'],
-                'author_name': commit_data['author']['name'],
-                'author_date': commit_data['author']['date'],
-                'committer_name': commit_data['committer']['name'],
-                'committer_date': commit_data['committer']['date'],
+                'author_name': commit_data['author_name'],
+                'author_date': commit_data['author_date'],
+                'committer_name': commit_data['committer_name'],
+                'committer_date': commit_data['committer_date'],
                 'additions': stats['additions'],
                 'deletions': stats['deletions'],
                 'total_changes': stats['total']
             })
-            sleep(1)  # Sleep to avoid hitting rate limit
 
         # Convert to DataFrame
         df = pd.DataFrame(commit_list)

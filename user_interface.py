@@ -5,11 +5,10 @@ class UserInterface:
     
     def get_git_details(self):
         # Get inputs from user
-        owner = "karanehk"
-        repo = "software_eng_lab6"
-        token = "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"
+        repo_url = "https://github.com/karanehk/software_eng_lab4"
+        temp_repo_dir = "./temp"
 
-        return owner, repo, token
+        return repo_url, temp_repo_dir
     
     def get_criteria(self):
         criteria = "Please review and identify any potential cheating or unusual behavior. Analyze the data above and explain your reasoning:"
